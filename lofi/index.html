@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SmartKas - Manajemen Keuangan</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -36,25 +37,276 @@
   </div>
 
   <!-- Navbar -->
-  <div class="navbar" id="navbar">
-    <a href="#" onclick="showPage('dashboard', this)"><i class="fas fa-chart-pie"></i><span>Dashboard</span></a>
-    <a href="#" onclick="showPage('pemasukan', this)"><i class="fas fa-plus-circle"></i><span>Pemasukan</span></a>
-    <a href="#" onclick="showPage('pengeluaran', this)"><i class="fas fa-minus-circle"></i><span>Pengeluaran</span></a>
-    <a href="#" onclick="showPage('utang', this)"><i class="fas fa-file-invoice-dollar"></i><span>Utang/Piutang</span></a>
-    <a href="#" onclick="showPage('laporan', this)"><i class="fas fa-file-alt"></i><span>Laporan</span></a>
-  </div>
+  <nav class="navbar" id="navbar"></nav>
 
   <!-- Content -->
   <div class="content" id="content">
+
     <!-- Dashboard -->
     <div id="dashboard" class="page">
-      <h2><i class="fas fa-chart-pie"></i> Dashboard</h2>
-      <div class="grid">
-        <div class="card stat-card"><h3>Pemasukan</h3><p class="income">Rp 12.000.000</p></div>
-        <div class="card stat-card"><h3>Pengeluaran</h3><p class="expense">Rp 8.500.000</p></div>
-        <div class="card stat-card"><h3>Saldo</h3><p class="balance">Rp 3.500.000</p></div>
+      <div class="dashboard-header">
+        <h2><i class="fas fa-chart-pie"></i> Dashboard</h2>
+        <div class="header-actions">
+          <button id="modeUmkmBtn" class="btn btn-umkm" onclick="aktifkanModeUmkm()">
+            <i class="fas fa-store"></i> Mode UMKM
+          </button>
+          <button id="themeToggleBtn" class="btn btn-theme" onclick="toggleTheme()">
+            <i id="themeIcon" class="fas fa-sun"></i>
+          </button>
+        </div>
       </div>
-      <div class="card"><h3><i class="fas fa-chart-bar"></i> Grafik Keuangan</h3><canvas id="chart" width="400" height="150"></canvas></div>
+
+      <!-- Summary Cards -->
+      <div class="summary-cards">
+        <div class="summary-card income">
+          <div class="summary-icon">📈</div>
+          <div class="summary-value" id="totalPemasukan">Rp 0</div>
+          <div class="summary-label">Total Pemasukan</div>
+        </div>
+        <div class="summary-card expense">
+          <div class="summary-icon">📉</div>
+          <div class="summary-value" id="totalPengeluaran">Rp 0</div>
+          <div class="summary-label">Total Pengeluaran</div>
+        </div>
+        <div class="summary-card balance">
+          <div class="summary-icon">💰</div>
+          <div class="summary-value" id="sisaSaldo">Rp 0</div>
+          <div class="summary-label">Sisa Saldo</div>
+        </div>
+      </div>
+
+      <!-- Grafik Keuangan -->
+      <div class="card">
+        <h3><i class="fas fa-chart-bar"></i> Grafik Keuangan</h3>
+        <div class="chart-switch" style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+          <button class="btn" onclick="updateChartView('harian')"><i class="fas fa-calendar-day"></i> Harian</button>
+          <button class="btn" onclick="updateChartView('bulanan')"><i class="fas fa-calendar-alt"></i> Bulanan</button>
+          <button class="btn" onclick="updateChartView('tahunan')"><i class="fas fa-calendar"></i> Tahunan</button>
+        </div>
+        <div class="chart-container">
+          <canvas id="chartKeuangan"></canvas>
+        </div>
+      </div>
+
+      <!-- Transaksi Terbaru -->
+      <div class="card">
+        <h3><i class="fas fa-history"></i> Transaksi Terbaru</h3>
+        <div class="table-container">
+          <table id="tabelTransaksiTerbaru">
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Kategori</th>
+                <th>Deskripsi</th>
+                <th>Jumlah</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div style="margin-top:10px;">
+<button id="prevPage" onclick="changePage('prev')">Prev</button>
+<span id="pageInfo"></span>
+<button id="nextPage" onclick="changePage('next')">Next</button>
+</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Laporan -->
+<div id="laporan" class="page" style="display:none;">
+  <h2><i class="fas fa-file-alt"></i> Laporan Keuangan</h2>
+
+  <div class="card">
+    <!-- Tab Navigasi -->
+    <div class="tabs">
+      <button class="active" onclick="showLaporan('harian', this)">Harian</button>
+      <button onclick="showLaporan('bulanan', this)">Bulanan</button>
+      <button onclick="showLaporan('tahunan', this)">Tahunan</button>
+    </div>
+
+    <!-- ====== LAPORAN HARIAN ====== -->
+    <div id="lapHarian" class="laporan-section">
+      <div class="filter-bar">
+        <label for="filterHarian"><i class="fas fa-calendar-day"></i> Pilih Tanggal:</label>
+        <input type="date" id="filterHarian" onchange="updateLaporan('harian')" />
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th>Jenis</th>
+            <th>Deskripsi</th>
+            <th>Jumlah</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- ====== LAPORAN BULANAN ====== -->
+    <div id="lapBulanan" class="laporan-section" style="display:none;">
+      <div class="filter-bar">
+        <label for="filterBulanan"><i class="fas fa-calendar-alt"></i> Pilih Bulan:</label>
+        <input type="month" id="filterBulanan" onchange="updateLaporan('bulanan')" />
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th>Jenis</th>
+            <th>Deskripsi</th>
+            <th>Jumlah</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- ====== LAPORAN TAHUNAN ====== -->
+    <div id="lapTahunan" class="laporan-section" style="display:none;">
+      <div class="filter-bar">
+        <label for="filterTahunan"><i class="fas fa-calendar"></i> Pilih Tahun:</label>
+        <select id="filterTahunan" onchange="updateLaporan('tahunan')">
+          <!-- Tahun akan diisi otomatis lewat JS -->
+        </select>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th>Jenis</th>
+            <th>Deskripsi</th>
+            <th>Jumlah</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Tombol Cetak -->
+    <div style="margin-top:15px; text-align:right;">
+      <button class="btn" onclick="printLaporan()">
+        <i class="fas fa-print"></i> Cetak Laporan
+      </button>
+    </div>
+  </div>
+</div>
+
+
+    <!-- UMKM Intro -->
+    <div id="umkmIntro" class="page" style="display:none;">
+      <div class="card">
+        <h2><i class="fas fa-store"></i> Mode UMKM</h2>
+        <p style="margin-bottom:16px;color:var(--muted);">
+          Kelola usaha kecilmu dengan fitur khusus: produk, penjualan, inventori, dan laporan UMKM.
+        </p>
+        <ul style="margin-left:18px;margin-bottom:18px;">
+          <li>• Manajemen produk & harga</li>
+          <li>• Pencatatan penjualan cepat</li>
+          <li>• Stok & inventori</li>
+          <li>• Laporan UMKM</li>
+        </ul>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-success" onclick="enterUMKM()">
+            <i class="fas fa-door-open"></i> Mulai Mode UMKM
+          </button>
+          <button class="btn" onclick="renderNavbar('personal','dashboard')">
+            <i class="fas fa-arrow-left"></i> Kembali
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- UMKM Dashboard -->
+    <div id="umkmDashboard" class="page" style="display:none;">
+      <div class="dashboard-header">
+        <h2><i class="fas fa-store"></i> UMKM Dashboard</h2>
+        <div class="header-actions">
+          <button id="umkmThemeToggleBtn" class="btn btn-theme" onclick="toggleTheme()">
+            <i id="umkmThemeIcon" class="fas fa-sun"></i>
+          </button>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="card stat-card"><h3>Produk Aktif</h3><p id="statProduk" class="balance">0</p></div>
+        <div class="card stat-card"><h3>Penjualan Hari Ini</h3><p id="statPenjualan" class="income">Rp 0</p></div>
+        <div class="card stat-card"><h3>Stok Rendah</h3><p id="statStok" class="expense">0 Item</p></div>
+      </div>
+    </div>
+
+    <!-- UMKM Produk -->
+    <div id="umkmPage" class="page" style="display:none;">
+      <h2><i class="fas fa-box"></i> Produk</h2>
+      <div class="card">
+        <h3><i class="fas fa-boxes"></i> Manajemen Produk</h3>
+        <input type="text" id="namaProduk" placeholder="Nama Produk">
+        <input type="number" id="hargaProduk" placeholder="Harga">
+        <button class="btn btn-success" onclick="tambahProduk()"><i class="fas fa-plus"></i> Tambah Produk</button>
+      </div>
+      <div class="card">
+        <h3><i class="fas fa-list"></i> Daftar Produk</h3>
+        <table id="tabelProduk">
+          <tr><th>Nama Produk</th><th>Harga</th><th>Aksi</th></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- UMKM Penjualan -->
+    <div id="umkmPenjualan" class="page" style="display:none;">
+      <h2><i class="fas fa-cash-register"></i> Penjualan</h2>
+      <div class="card">
+        <h3><i class="fas fa-plus"></i> Transaksi Baru</h3>
+        <input type="text" id="jualNama" placeholder="Nama Produk">
+        <input type="number" id="jualQty" placeholder="Qty">
+        <input type="number" id="jualHarga" placeholder="Harga Satuan">
+        <button class="btn btn-success" onclick="tambahPenjualan()"><i class="fas fa-check"></i> Simpan</button>
+      </div>
+      <div class="card">
+        <h3><i class="fas fa-list"></i> Riwayat Penjualan</h3>
+        <table id="tabelPenjualan">
+          <tr><th>Tanggal</th><th>Produk</th><th>Qty</th><th>Total</th><th>Aksi</th></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- UMKM Inventori -->
+    <div id="umkmInventori" class="page" style="display:none;">
+      <h2><i class="fas fa-boxes-stacked"></i> Inventori</h2>
+      <div class="card">
+        <h3><i class="fas fa-box"></i> Tambah Stok</h3>
+        <input type="text" id="stokNama" placeholder="Nama Produk">
+        <input type="number" id="stokQty" placeholder="Jumlah">
+        <button class="btn btn-success" onclick="tambahStok()"><i class="fas fa-plus"></i> Tambah</button>
+      </div>
+      <div class="card">
+        <h3><i class="fas fa-warehouse"></i> Stok Saat Ini</h3>
+        <table id="tabelStok">
+          <tr><th>Produk</th><th>Stok</th><th>Aksi</th></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- UMKM Laporan -->
+    <div id="umkmLaporan" class="page" style="display:none;">
+      <h2><i class="fas fa-file-invoice"></i> Laporan UMKM</h2>
+      <div class="card">
+        <h3><i class="fas fa-chart-line"></i> Ringkasan</h3>
+        <p style="color:var(--muted);margin-bottom:6px;">Rekap penjualan & profit khusus UMKM.</p>
+        <button class="btn" onclick="printLaporan()"><i class="fas fa-print"></i> Cetak</button>
+      </div>
+    </div>
+
+    <!-- UMKM Pengaturan -->
+    <div id="umkmPengaturan" class="page" style="display:none;">
+      <h2><i class="fas fa-gear"></i> Pengaturan UMKM</h2>
+      <div class="card">
+        <h3><i class="fas fa-right-from-bracket"></i> Mode</h3>
+        <button class="btn btn-danger" onclick="exitUMKM()"><i class="fas fa-sign-out-alt"></i> Keluar dari Mode UMKM</button>
+      </div>
     </div>
 
     <!-- Pemasukan -->
@@ -66,7 +318,12 @@
         <input type="number" placeholder="Jumlah" id="jumlahIn">
         <button class="btn btn-success" onclick="tambahPemasukan()"><i class="fas fa-plus"></i> Tambah</button>
       </div>
-      <div class="card"><h3><i class="fas fa-list"></i> Daftar Pemasukan</h3><table id="tabelPemasukan"><tr><th>Sumber</th><th>Jumlah</th></tr></table></div>
+      <div class="card">
+        <h3><i class="fas fa-list"></i> Daftar Pemasukan</h3>
+        <table id="tabelPemasukan">
+          <tr><th>Sumber</th><th>Jumlah</th><th>Tanggal</th><th>Aksi</th></tr>
+        </table>
+      </div>
     </div>
 
     <!-- Pengeluaran -->
@@ -78,19 +335,86 @@
         <input type="number" placeholder="Jumlah" id="jumlahOut">
         <button class="btn" onclick="tambahPengeluaran()"><i class="fas fa-plus"></i> Tambah</button>
       </div>
-      <div class="card"><h3><i class="fas fa-list"></i> Daftar Pengeluaran</h3><table id="tabelPengeluaran"><tr><th>Kebutuhan</th><th>Jumlah</th></tr></table></div>
+      <div class="card">
+        <h3><i class="fas fa-list"></i> Daftar Pengeluaran</h3>
+        <table id="tabelPengeluaran">
+          <tr><th>Kebutuhan</th><th>Jumlah</th><th>Tanggal</th><th>Aksi</th></tr>
+        </table>
+      </div>
     </div>
 
-    <!-- Utang Piutang -->
+    <!-- Tagihan -->
     <div id="utang" class="page" style="display:none">
-      <h2><i class="fas fa-file-invoice-dollar"></i> Utang / Piutang</h2>
+      <h2><i class="fas fa-file-invoice-dollar"></i> Tagihan</h2>
       <div class="card">
-        <h3><i class="fas fa-list"></i> Daftar Utang & Piutang</h3>
-        <table>
-          <tr><th>Jenis</th><th>Nama</th><th>Jumlah</th><th>Status</th></tr>
-          <tr><td>Utang</td><td>Budi</td><td>Rp 1.000.000</td><td>Belum Lunas</td></tr>
-          <tr><td>Piutang</td><td>Ani</td><td>Rp 750.000</td><td>Lunas</td></tr>
-        </table>
+        <h3><i class="fas fa-plus-circle"></i> Tambah Tagihan Baru</h3>
+        <div class="form-grid">
+          <div class="field">
+            <label><i class="fas fa-tag"></i> Jenis Tagihan</label>
+            <select id="jenisTagihan" class="form-select">
+              <option value="utang">Utang (Saya berhutang)</option>
+              <option value="piutang">Piutang (Orang berhutang ke saya)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label><i class="fas fa-user"></i> Nama</label>
+            <input type="text" id="namaTagihan" placeholder="Nama orang/instansi">
+          </div>
+          <div class="field">
+            <label><i class="fas fa-money-bill-wave"></i> Jumlah</label>
+            <input type="number" id="jumlahTagihan" placeholder="Jumlah tagihan">
+          </div>
+          <div class="field">
+            <label><i class="fas fa-calendar"></i> Tenggat Waktu</label>
+            <input type="date" id="tenggatTagihan">
+          </div>
+        </div>
+        <button class="btn btn-success" onclick="tambahTagihan()">
+          <i class="fas fa-plus"></i> Tambah Tagihan
+        </button>
+      </div>
+
+      <div class="card">
+        <h3><i class="fas fa-list"></i> Daftar Tagihan</h3>
+        <div class="filter-tabs">
+          <button class="filter-btn active" onclick="filterTagihan('semua')">Semua</button>
+          <button class="filter-btn" onclick="filterTagihan('utang')">Utang</button>
+          <button class="filter-btn" onclick="filterTagihan('piutang')">Piutang</button>
+          <button class="filter-btn" onclick="filterTagihan('belum-lunas')">Belum Lunas</button>
+          <button class="filter-btn" onclick="filterTagihan('lunas')">Lunas</button>
+        </div>
+
+        <table id="tabelTagihan">
+  <thead>
+    <tr>
+      <th>Jenis</th>
+      <th>Nama</th>
+      <th>Jumlah</th>
+      <th>Tenggat</th>
+      <th>Status</th>
+      <th>Aksi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- Data tagihan akan ditambahkan di sini oleh JavaScript -->
+  </tbody>
+</table>
+
+
+        <div class="summary-cards">
+          <div class="summary-card">
+            <div class="summary-label">Total Utang</div>
+            <div class="summary-value utang">Rp 0</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Total Piutang</div>
+            <div class="summary-value piutang">Rp 0</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Saldo Bersih</div>
+            <div class="summary-value net">Rp 0</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -104,31 +428,69 @@
           <button onclick="showLaporan('bulanan', this)">Bulanan</button>
           <button onclick="showLaporan('tahunan', this)">Tahunan</button>
         </div>
-        <button class="btn" style="margin-bottom:15px" onclick="printLaporan()"><i class="fas fa-print"></i> Cetak Laporan</button>
-        
+        <button class="btn" onclick="printLaporan()"><i class="fas fa-print"></i> Cetak Laporan</button>
         <div id="lapHarian">
           <table>
             <tr><th>Tanggal</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th></tr>
-            <tr><td>01-10-2025</td><td>Rp 500.000</td><td>Rp 200.000</td><td>Rp 300.000</td></tr>
-            <tr><td>02-10-2025</td><td>Rp 800.000</td><td>Rp 400.000</td><td>Rp 400.000</td></tr>
           </table>
         </div>
-        
-        <div id="lapBulanan" style="display:none">
-          <table>
-            <tr><th>Bulan</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th></tr>
-            <tr><td>Januari</td><td>Rp 12.000.000</td><td>Rp 8.500.000</td><td>Rp 3.500.000</td></tr>
-            <tr><td>Februari</td><td>Rp 10.500.000</td><td>Rp 7.200.000</td><td>Rp 3.300.000</td></tr>
-          </table>
+      </div>
+    </div>
+
+    <!-- Pengaturan -->
+    <div id="pengaturan" class="page" style="display:none;">
+      <h2><i class="fas fa-user-cog"></i> Profil Saya</h2>
+      <div class="card profile-card">
+        <div class="profile-header">
+          <img class="avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80" alt="Foto Profil">
+          <div class="profile-name">PEOPLE</div>
+          <div class="profile-location">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>Jakarta</span>
+          </div>
+          <p class="profile-quote">"Being gay is like glitter, it never goes away."</p>
         </div>
-        
-        <div id="lapTahunan" style="display:none">
-          <table>
-            <tr><th>Tahun</th><th>Pemasukan</th><th>Pengeluaran</th><th>Saldo</th></tr>
-            <tr><td>2024</td><td>Rp 120.000.000</td><td>Rp 85.000.000</td><td>Rp 35.000.000</td></tr>
-            <tr><td>2025</td><td>Rp 150.000.000</td><td>Rp 110.000.000</td><td>Rp 40.000.000</td></tr>
-          </table>
+        <div class="profile-details">
+          <div class="details-grid">
+            <div class="detail-item">
+              <div class="detail-label">Sisa Saldo</div>
+              <div class="detail-value" id="profilSaldo">Rp 0</div>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <button class="btn btn-secondary" onclick="editProfile()">
+              <i class="fas fa-pencil-alt"></i> Edit Profil
+            </button>
+            <button class="btn btn-danger" onclick="logout()">
+              <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+          </div>
         </div>
+      </div>
+
+      <div class="card">
+        <h3><i class="fas fa-user-shield"></i> Keamanan Akun</h3>
+        <div class="security-options">
+          <button class="btn btn-outline" onclick="showPage('tentang')">
+            <i class="fas fa-circle-info"></i> Tentang Aplikasi
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tentang -->
+    <div id="tentang" class="page" style="display:none;">
+      <h2><i class="fas fa-circle-info"></i> Tentang</h2>
+      <div class="card">
+        <h3><i class="fas fa-code-branch"></i> Versi Aplikasi</h3>
+        <p>SmartKas <strong>v1.0</strong></p>
+      </div>
+      <div class="card">
+        <h3><i class="fas fa-people-group"></i> Pengembang</h3>
+        <ul>
+          <li>Ahmad Septian Eka Setiawan</li>
+          <li>Ihsanul Hafidzin</li>
+        </ul>
       </div>
     </div>
   </div>
